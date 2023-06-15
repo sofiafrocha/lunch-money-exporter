@@ -9,7 +9,7 @@ dotenv.config();
 const API_URL = 'https://dev.lunchmoney.app/v1/';
 const DEFAULT_NAME = 'exported-transactions';
 
-function makeRequest(url: string, params: object = {}) {
+function makeAPIRequest(url: string, params: object = {}) {
   const config = {
     headers: { Authorization: `Bearer ${process.env.API_TOKEN}` }
   }
@@ -26,7 +26,7 @@ function getAccountInfo() {
 
 function getTransactions(offset: number = 0, limit: number = 100, startDate: string = '2020-01-01', endDate: string = dayjs().format('YYYY-MM-DD')) {
 
-  return makeRequest(API_URL + 'transactions', {
+  return makeAPIRequest(API_URL + 'transactions', {
     start_date: startDate,
     end_date: endDate,
     ...(offset ? { offset } : {}),
@@ -34,8 +34,8 @@ function getTransactions(offset: number = 0, limit: number = 100, startDate: str
   });
 }
 
-function convertToCSV(jsonThing: Array<object> = [], outputFileName: string = `${DEFAULT_NAME}.csv`) {
-  json2csv(jsonThing)
+function convertToCSV(input: Array<object> = [], outputFileName: string = `${DEFAULT_NAME}.csv`) {
+  json2csv(input)
     .then((result) => {
       console.log('number of transactions saved: ', result.length);
       fs.writeFileSync(outputFileName, result);
