@@ -2,10 +2,12 @@ import * as dotenv from 'dotenv';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import * as fs from 'fs';
+import { json2csv } from 'json-2-csv';
 
 dotenv.config();
 
 const API_URL = 'https://dev.lunchmoney.app/v1/';
+const DEFAULT_NAME = 'exported-transactions';
 
 function makeRequest(url: string, params: object = {}) {
   const config = {
@@ -15,7 +17,6 @@ function makeRequest(url: string, params: object = {}) {
     params: params,
     ...config,
   });
-
 }
 /*
 function getAccountInfo() {
@@ -24,7 +25,7 @@ function getAccountInfo() {
 */
 
 function getTransactions(offset: number = 0, limit: number = 100, startDate: string = '2020-01-01', endDate: string = dayjs().format('YYYY-MM-DD')) {
-  console.log('getting transactions on offset', offset);
+
   return makeRequest(API_URL + 'transactions', {
     start_date: startDate,
     end_date: endDate,
@@ -33,10 +34,20 @@ function getTransactions(offset: number = 0, limit: number = 100, startDate: str
   });
 }
 
+function convertToCSV(jsonThing: Array<object> = [], outputFileName: string = `${DEFAULT_NAME}.csv`) {
+  json2csv(jsonThing)
+    .then((result) => {
+      console.log('number of transactions saved: ', result.length);
+      fs.writeFileSync(outputFileName, result);
+    })
+    .catch(err => console.log('err!', err));
+}
+
 (async () => {
   const { data } = await getTransactions();
   const { transactions } = data;
 
-  fs.writeFileSync('beep-beep-transactions.json', JSON.stringify(transactions));
+  fs.writeFileSync(`${DEFAULT_NAME}.json`, JSON.stringify(transactions));
+  convertToCSV(transactions);
 })();
 
