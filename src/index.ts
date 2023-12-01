@@ -40,7 +40,7 @@ function getTransactions(
 function convertToCSV(input: Array<object> = [], outputFileName: string = DEFAULT_NAME) {
   json2csv(input)
     .then((result) => {
-      console.log('number of transactions saved: ', result.length);
+      console.log('Number of transactions saved: ', result.length);
       fs.writeFileSync(`${outputFileName}.csv`, result);
     })
     .catch(err => console.log('err!', err));
