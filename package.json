@@ -1,0 +1,14 @@
+{
+  "name": "lunch-money-exporter",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@biomejs/biome": "2.3.5",
+    "@types/bun": "latest",
+    "lefthook": "^2.0.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
