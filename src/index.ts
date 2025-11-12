@@ -1,4 +1,4 @@
-import { parseArgs } from "util";
+import { parseArgs } from "node:util";
 
 // Process the args that were passed
 const { values } = parseArgs({
