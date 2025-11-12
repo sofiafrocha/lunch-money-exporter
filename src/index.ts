@@ -1,5 +1,32 @@
-console.log("Hello there!");
+import { parseArgs } from "util";
 
-const beep = 3;
+// Process the args that were passed
+const { values } = parseArgs({
+	args: Bun.argv,
+	options: {
+		apiKey: {
+			type: "string",
+		},
+		startDate: {
+			type: "string",
+		},
+		endDate: {
+			type: "string",
+		},
+	},
+	strict: true,
+	allowPositionals: true,
+});
 
-console.log("beep", beep);
+const { apiKey, startDate } = values;
+let { endDate } = values;
+
+if (!apiKey) {
+	throw new Error("API Key must be passed");
+}
+if (!startDate) {
+	throw new Error("A start date must be passed");
+}
+if (!endDate) {
+	endDate = new Date().toISOString().slice(0, 10);
+}
