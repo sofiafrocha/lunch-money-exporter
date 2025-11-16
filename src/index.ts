@@ -21,13 +21,16 @@ const { values } = parseArgs({
 		endDate: {
 			type: "string",
 		},
+		outFolder: {
+			type: "string",
+		},
 	},
 	strict: true,
 	allowPositionals: true,
 });
 
 const { apiKey, startDate } = values;
-let { endDate } = values;
+let { endDate, outFolder } = values;
 
 if (!apiKey) {
 	throw new Error("API Key must be passed");
@@ -37,6 +40,9 @@ if (!startDate) {
 }
 if (!endDate) {
 	endDate = new Date().toISOString().slice(0, 10);
+}
+if (!outFolder) {
+	outFolder = ".";
 }
 
 async function getTransactions({
@@ -85,7 +91,7 @@ async function getTransactions({
 	}
 
 	const csv = generateCsv(csvConfig)(formatedTransactions as any);
-	const filename = `export-${startDate}-${endDate}.csv`;
+	const filename = `${outFolder}/export-${startDate}-${endDate}.csv`;
 	const csvBuffer = new Uint8Array(Buffer.from(asString(csv)));
 
 	writeFile(filename, csvBuffer, (err) => {
