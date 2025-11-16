@@ -1,105 +1,113 @@
-import * as dotenv from 'dotenv';
-import axios from 'axios';
-import dayjs from 'dayjs';
-import * as fs from 'fs';
-import { json2csv } from 'json-2-csv';
+import { Buffer } from "node:buffer";
+import { writeFile } from "node:fs";
+import { parseArgs } from "node:util";
+import { asString, generateCsv, mkConfig } from "export-to-csv";
 
-import { intro, outro, text, confirm, spinner } from '@clack/prompts';
+import type { Transaction, TransactionsResponse } from "./types";
+import { splitDateRangeByYears } from "./utils";
 
-dotenv.config();
+const csvConfig = mkConfig({ useKeysAsHeaders: true });
 
-const s = spinner();
-const API_URL = 'https://dev.lunchmoney.app/v1/';
-const DEFAULT_NAME = 'exported-transactions';
+// Process the args that were passed
+const { values } = parseArgs({
+	args: Bun.argv,
+	options: {
+		apiKey: {
+			type: "string",
+		},
+		startDate: {
+			type: "string",
+		},
+		endDate: {
+			type: "string",
+		},
+	},
+	strict: true,
+	allowPositionals: true,
+});
 
-function makeAPIRequest(url: string, params: object = {}, apiToken: string) {
-  const config = {
-    headers: { Authorization: `Bearer ${apiToken}` }
-  }
-  return axios.get(url, {
-    params: params,
-    ...config,
-  });
+const { apiKey, startDate } = values;
+let { endDate } = values;
+
+if (!apiKey) {
+	throw new Error("API Key must be passed");
+}
+if (!startDate) {
+	throw new Error("A start date must be passed");
+}
+if (!endDate) {
+	endDate = new Date().toISOString().slice(0, 10);
 }
 
-function getTransactions(
-  apiKey: string,
-  startDate: string = '2020-01-01',
-  endDate: string = dayjs().format('YYYY-MM-DD'),
-  offset: number = 0,
-  limit: number = 100,
-) {
-  return makeAPIRequest(API_URL + 'transactions', {
-    start_date: startDate,
-    end_date: endDate,
-    ...(offset ? { offset } : {}),
-    ...(limit ? { limit } : {})
-  }, apiKey);
+async function getTransactions({
+	startDate,
+	endDate,
+}: {
+	startDate: string;
+	endDate: string;
+}) {
+	const apiUrl = new URL("https://dev.lunchmoney.app/v1/transactions");
+	apiUrl.searchParams.set("start_date", startDate);
+	apiUrl.searchParams.set("end_date", endDate);
+	let transactions: Transaction[] = [];
+	let formatedTransactions = [];
+
+	try {
+		const response = await fetch(apiUrl.toString(), {
+			headers: {
+				Authorization: `Bearer ${apiKey}`,
+				"Content-Type": "application/json",
+			},
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(
+				`Failed to fetch transactions: ${response.status} ${response.statusText}\n${errorText}`,
+			);
+		}
+
+		const data = (await response.json()) as TransactionsResponse;
+		transactions = data.transactions || [];
+		formatedTransactions = transactions.map((t) => ({
+			...t,
+			plaid_metadata: JSON.stringify(t.plaid_metadata),
+			tags: t.tags?.join(","),
+		}));
+
+		console.log(
+			`Found ${formatedTransactions.length} transactions between ${startDate} to ${endDate}`,
+		);
+		// console.log(JSON.stringify(transactions, null, 2));
+	} catch (error) {
+		console.error("Error fetching transactions:", error);
+		process.exit(1);
+	}
+
+	const csv = generateCsv(csvConfig)(formatedTransactions as any);
+	const filename = `export-${startDate}-${endDate}.csv`;
+	const csvBuffer = new Uint8Array(Buffer.from(asString(csv)));
+
+	writeFile(filename, csvBuffer, (err) => {
+		if (err) throw err;
+		console.log("file saved: ", filename);
+	});
 }
 
-function convertToCSV(input: Array<object> = [], outputFileName: string = DEFAULT_NAME) {
-  json2csv(input)
-    .then((result) => {
-      console.log('Number of transactions saved: ', result.length);
-      fs.writeFileSync(`${outputFileName}.csv`, result);
-    })
-    .catch(err => console.log('err!', err));
-}
+const dateRanges = splitDateRangeByYears(
+	startDate as string,
+	endDate as string,
+);
 
-(async () => {
-  intro(`lunch-money-exporter`);
+const transactionPromises = dateRanges.map((range) => {
+	const [startDate, endDate] = range as [string, string];
+	return getTransactions({ startDate, endDate });
+});
 
-  const apiKey = await text({
-    message: 'Insert your LunchMoney API key. You can get one on https://my.lunchmoney.app/developers.',
-    validate(value) {
-      if (value.length === 0) return `The API key is required!`;
-    },
-  });
-
-  const startDate = await text({
-    message: 'Export transactions from this (start) date...',
-    placeholder: 'YYYY-MM-DD',
-    validate(value) {
-      const regEx = /^\d{4}-\d{2}-\d{2}$/;
-      if (!value.match(regEx)) return 'Invalid date format!';
-    }
-  });
-
-  const endDate = await text({
-    message: '...until this (end) date.',
-    placeholder: 'YYYY-MM-DD',
-    initialValue: dayjs().format('YYYY-MM-DD'),
-    validate(value) {
-      const regEx = /^\d{4}-\d{2}-\d{2}$/;
-      if (!value.match(regEx)) return 'Invalid date format!';
-    }
-  });
-
-  const fileName = await text({
-    message: 'What should the file be named?',
-    initialValue: 'exported-transactions',
-    validate(value) {
-      if (value.length === 0) return `The file name is required!`;
-    },
-  });
-
-  const saveJsonFile = await confirm({
-    message: 'Do you want to save it on a JSON file too?',
-  });
-
-  s.start('Getting transactions...');
-  const { data } = await getTransactions(String(apiKey), String(startDate), String(endDate));
-  const { transactions } = data;
-  s.stop('Transactions downloaded!');
-
-  if (saveJsonFile) {
-    fs.writeFileSync(`${String(fileName)}.json`, JSON.stringify(transactions));
-  }
-
-  s.start('Converting to CSV...');
-  convertToCSV(transactions, String(fileName));
-  s.stop('Data converted!');
-
-  outro(`You're all set! File saved in ${String(fileName)}.csv`);
-})();
-
+Promise.all(transactionPromises)
+	.then(() => {
+		console.log("All transactions fetched successfully.");
+	})
+	.catch((error) => {
+		console.error("Error fetching transactions:", error);
+	});

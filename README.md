@@ -1,16 +1,15 @@
-# LunchMoney exporter
+# lunch-money-exporter
 
-Use the terminal to get your [LunchMoney](http://lunchmoney.app) transactions in CSV format.
+To install dependencies:
 
-## Prerequisite
-- [NodeJS 18](https://nodejs.dev/en/)
-
-## Install
 ```bash
-$ npm install
+bun install
 ```
 
-## Usage
+To run:
+
 ```bash
-$ npm run start
+bun run index.ts
 ```
+
+This project was created using `bun init` in bun v1.2.15. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
