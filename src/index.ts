@@ -39,12 +39,6 @@ if (!endDate) {
 	endDate = new Date().toISOString().slice(0, 10);
 }
 
-const dateRanges = splitDateRangeByYears(
-	startDate as string,
-	endDate as string,
-);
-console.log("Date ranges by year:", dateRanges);
-
 async function getTransactions({
 	startDate,
 	endDate,
@@ -81,7 +75,9 @@ async function getTransactions({
 			tags: t.tags?.join(","),
 		}));
 
-		console.log(`Found ${formatedTransactions.length} transactions`);
+		console.log(
+			`Found ${formatedTransactions.length} transactions between ${startDate} to ${endDate}`,
+		);
 		// console.log(JSON.stringify(transactions, null, 2));
 	} catch (error) {
 		console.error("Error fetching transactions:", error);
@@ -97,3 +93,21 @@ async function getTransactions({
 		console.log("file saved: ", filename);
 	});
 }
+
+const dateRanges = splitDateRangeByYears(
+	startDate as string,
+	endDate as string,
+);
+
+const transactionPromises = dateRanges.map((range) => {
+	const [startDate, endDate] = range as [string, string];
+	return getTransactions({ startDate, endDate });
+});
+
+Promise.all(transactionPromises)
+	.then(() => {
+		console.log("All transactions fetched successfully.");
+	})
+	.catch((error) => {
+		console.error("Error fetching transactions:", error);
+	});
