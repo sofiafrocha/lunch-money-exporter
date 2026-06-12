@@ -3,6 +3,9 @@
   "workspaces": {
     "": {
       "name": "lunch-money-exporter",
+      "dependencies": {
+        "export-to-csv": "^1.4.0",
+      },
       "devDependencies": {
         "@biomejs/biome": "2.3.5",
         "@types/bun": "latest",
@@ -41,6 +44,8 @@
     "bun-types": ["bun-types@1.3.2", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-i/Gln4tbzKNuxP70OWhJRZz1MRfvqExowP7U6JKoI8cntFrtxg7RJK3jvz7wQW54UuvNC8tbKHHri5fy74FVqg=="],
 
     "csstype": ["csstype@3.1.3", "", {}, "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="],
+
+    "export-to-csv": ["export-to-csv@1.4.0", "", {}, "sha512-6CX17Cu+rC2Fi2CyZ4CkgVG3hLl6BFsdAxfXiZkmDFIDY4mRx2y2spdeH6dqPHI9rP+AsHEfGeKz84Uuw7+Pmg=="],
 
     "lefthook": ["lefthook@2.0.3", "", { "optionalDependencies": { "lefthook-darwin-arm64": "2.0.3", "lefthook-darwin-x64": "2.0.3", "lefthook-freebsd-arm64": "2.0.3", "lefthook-freebsd-x64": "2.0.3", "lefthook-linux-arm64": "2.0.3", "lefthook-linux-x64": "2.0.3", "lefthook-openbsd-arm64": "2.0.3", "lefthook-openbsd-x64": "2.0.3", "lefthook-windows-arm64": "2.0.3", "lefthook-windows-x64": "2.0.3" }, "bin": { "lefthook": "bin/index.js" } }, "sha512-VcZP1QvyRXz8JwVFw3PIvaOzLC8udQZuBhj+7J6OojzLDNWY4B9FdizpZtMq5iFM4TOAq1EFQCixIgDeTaBoLQ=="],
 
