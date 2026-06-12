@@ -17,25 +17,31 @@ bun install
 
 ## Run
 
+Create a `.env` file with your Lunch Money API token:
+
+```bash
+LUNCH_MONEY_API_KEY=YOUR_LUNCH_MONEY_API_TOKEN
+```
+
 ```bash
 mkdir -p exports
-bun run src/index.ts --apiKey YOUR_LUNCH_MONEY_API_TOKEN --startDate 2024-01-01 --endDate 2024-12-31 --outFolder ./exports
+bun run src/index.ts --startDate 2024-01-01 --endDate 2024-12-31 --outFolder ./exports
 ```
 
 Required arguments:
 
-- `--apiKey`: your Lunch Money API token
 - `--startDate`: first transaction date to export, in `YYYY-MM-DD` format
 
 Optional arguments:
 
+- `--apiKey`: your Lunch Money API token. Defaults to `LUNCH_MONEY_API_KEY` from the environment.
 - `--endDate`: last transaction date to export, in `YYYY-MM-DD` format. Defaults to today.
 - `--outFolder`: existing folder where CSV files are written. Defaults to the current directory.
 
 Example using defaults for `endDate` and `outFolder`:
 
 ```bash
-bun run src/index.ts --apiKey YOUR_LUNCH_MONEY_API_TOKEN --startDate 2024-01-01
+bun run src/index.ts --startDate 2024-01-01
 ```
 
 ## Output
